@@ -1,0 +1,5 @@
+.sisyphus
+plans
+node_modules
+.ray
+*.tsbuildinfo
