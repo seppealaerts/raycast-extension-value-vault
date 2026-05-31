@@ -187,7 +187,7 @@ export default function Command() {
                     target={<EditValueForm entry={entry} onUpdate={revalidate} />}
                   />
                   <Action
-                    icon={Icon.Copy}
+                    icon={Icon.Duplicate}
                     title="Duplicate"
                     shortcut={{ modifiers: ["cmd"], key: "d" }}
                     onAction={() => handleDuplicate(entry)}
