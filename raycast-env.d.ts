@@ -21,7 +21,10 @@ declare namespace Preferences {
 
 declare namespace Arguments {
   /** Arguments passed to the `browse-values` command */
-  export type BrowseValues = {}
+  export type BrowseValues = {
+  /** Search values… */
+  "query": string
+}
   /** Arguments passed to the `add-value` command */
   export type AddValue = {}
 }

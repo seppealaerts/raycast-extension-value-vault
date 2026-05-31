@@ -6,12 +6,13 @@ import {
   Color,
   confirmAlert,
   Icon,
+  LaunchProps,
   List,
   showHUD,
   showToast,
   Toast,
 } from "@raycast/api";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { usePromise } from "@raycast/utils";
 import { v4 as uuidv4 } from "uuid";
 import { getAllEntries, deleteEntry, saveEntry } from "./storage";
@@ -55,7 +56,8 @@ function formatRelativeTime(ms: number): string {
   return `${months}mo ago`;
 }
 
-export default function Command() {
+export default function Command(props: LaunchProps<{ arguments: { query?: string } }>) {
+  const [searchText, setSearchText] = useState(props.arguments?.query ?? "");
   const { isLoading, data: entries, error, revalidate } = usePromise(getAllEntries, []);
 
   useEffect(() => {
@@ -115,6 +117,8 @@ export default function Command() {
   return (
     <List
       isLoading={isLoading}
+      searchText={searchText}
+      onSearchTextChange={setSearchText}
       searchBarPlaceholder="Search values..."
       actions={
         <ActionPanel>

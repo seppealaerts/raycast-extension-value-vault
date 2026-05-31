@@ -15,7 +15,15 @@
       "name": "browse-values",
       "title": "Browse Values",
       "description": "Search your saved values and copy them to the clipboard",
-      "mode": "view"
+      "mode": "view",
+      "arguments": [
+        {
+          "name": "query",
+          "type": "text",
+          "placeholder": "Search values…",
+          "required": false
+        }
+      ]
     },
     {
       "name": "add-value",
