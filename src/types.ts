@@ -19,24 +19,34 @@ export const VALUE_TYPE_OPTIONS: { value: ValueType; label: string }[] = [
 ];
 
 export function detectType(value: string): ValueType {
-  if (/^https?:\/\/.+/.test(value)) {
+  const trimmed = value.trim();
+  if (trimmed.length === 0) return "string";
+
+  if (/^https?:\/\/[^\s]+$/.test(trimmed)) {
     return "url";
   }
-  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(trimmed)) {
     return "email";
   }
-  try {
-    JSON.parse(value);
-    return "json";
-  } catch {
-    /* not JSON */
+
+  if (/^[\[{]/.test(trimmed)) {
+    try {
+      JSON.parse(trimmed);
+      return "json";
+    } catch {
+      /* not JSON */
+    }
   }
-  if (/^-?\d+(\.\d+)?$/.test(value.trim())) {
+
+  if (/^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$/.test(trimmed)) {
     return "number";
   }
-  if (/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(value.trim())) {
+
+  if (/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(trimmed)) {
     return "color";
   }
+
   return "string";
 }
 

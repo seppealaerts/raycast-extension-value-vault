@@ -1,5 +1,6 @@
 import { Action, ActionPanel, Form, showToast, Toast, useNavigation } from "@raycast/api";
 import { FormValidation, useForm } from "@raycast/utils";
+import { useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { saveEntry } from "./storage";
 import { ValueEntry, detectType, parseValueType, VALUE_TYPE_OPTIONS } from "./types";
@@ -58,6 +59,12 @@ export default function AddValueForm({ onSave }: Props) {
   });
 
   const detectedType = values.value ? detectType(values.value) : null;
+
+  useEffect(() => {
+    if (detectedType && detectedType !== parseValueType(values.type)) {
+      itemProps.type.onChange?.(detectedType);
+    }
+  }, [detectedType, values.type]);
 
   return (
     <Form
