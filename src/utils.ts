@@ -1,13 +1,24 @@
+/**
+ * Extract a human-readable message from an unknown error value.
+ * Prefers `error.message` when available, falls back to `String(error)`.
+ */
 export function getErrorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
   return String(error);
 }
 
+/**
+ * Truncate a string to a maximum length, appending "..." when truncated.
+ */
 export function truncateValue(value: string, maxLength = 100): string {
   if (value.length <= maxLength) return value;
   return value.slice(0, maxLength) + "...";
 }
 
+/**
+ * Format a timestamp as a human-readable relative time string.
+ * Uses actual calendar months for durations over 30 days.
+ */
 export function formatRelativeTime(ms: number): string {
   const seconds = Math.floor((Date.now() - ms) / 1000);
   if (seconds < 60) return "just now";

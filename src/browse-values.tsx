@@ -2,9 +2,6 @@ import {
   Action,
   ActionPanel,
   Alert,
-  Clipboard,
-  Color,
-  confirmAlert,
   Icon,
   LaunchProps,
   List,
@@ -16,31 +13,14 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePromise } from "@raycast/utils";
 import { v4 as uuidv4 } from "uuid";
 import { getAllEntries, deleteEntry, saveEntry } from "./storage";
-import { ValueEntry, ValueType } from "./types";
-import { formatRelativeTime, getErrorMessage, truncateValue } from "./utils";
+import { ValueEntry } from "./types";
+import { getErrorMessage } from "./utils";
+import { ValueListItem } from "./value-list-item";
 import AddValueForm from "./add-value";
-import EditValueForm from "./edit-value";
-
-const TYPE_ICONS: Record<ValueType, { icon: Icon; color: Color }> = {
-  string: { icon: Icon.Text, color: Color.PrimaryText },
-  number: { icon: Icon.Hashtag, color: Color.Blue },
-  url: { icon: Icon.Link, color: Color.Blue },
-  email: { icon: Icon.Envelope, color: Color.Magenta },
-  json: { icon: Icon.Code, color: Color.Orange },
-  color: { icon: Icon.EyeDropper, color: Color.Yellow },
-};
-
-const TYPE_NAMES: Record<ValueType, string> = {
-  string: "string",
-  number: "number",
-  url: "URL",
-  email: "email",
-  json: "JSON",
-  color: "color",
-};
 
 export default function Command(props: LaunchProps<{ arguments: { query?: string } }>) {
   const [searchText, setSearchText] = useState(props.arguments?.query ?? "");
+  const [isMutating, setIsMutating] = useState(false);
   const { isLoading, data: entries, error, revalidate } = usePromise(getAllEntries, []);
 
   useEffect(() => {
@@ -61,9 +41,10 @@ export default function Command(props: LaunchProps<{ arguments: { query?: string
         primaryAction: { title: "Delete", style: Alert.ActionStyle.Destructive },
       });
       if (!confirmed) return;
+      setIsMutating(true);
       try {
         await deleteEntry(id);
-        revalidate();
+        await revalidate();
         showHUD("Value deleted");
       } catch (e) {
         showToast({
@@ -71,6 +52,8 @@ export default function Command(props: LaunchProps<{ arguments: { query?: string
           title: "Failed to delete value",
           message: getErrorMessage(e),
         });
+      } finally {
+        setIsMutating(false);
       }
     },
     [revalidate],
@@ -78,6 +61,7 @@ export default function Command(props: LaunchProps<{ arguments: { query?: string
 
   const handleDuplicate = useCallback(
     async (entry: ValueEntry) => {
+      setIsMutating(true);
       try {
         const newEntry: ValueEntry = {
           id: uuidv4(),
@@ -88,7 +72,7 @@ export default function Command(props: LaunchProps<{ arguments: { query?: string
           updatedAt: Date.now(),
         };
         await saveEntry(newEntry);
-        revalidate();
+        await revalidate();
         showHUD("Value duplicated");
       } catch (e) {
         showToast({
@@ -96,6 +80,8 @@ export default function Command(props: LaunchProps<{ arguments: { query?: string
           title: "Failed to duplicate value",
           message: getErrorMessage(e),
         });
+      } finally {
+        setIsMutating(false);
       }
     },
     [revalidate],
@@ -108,7 +94,7 @@ export default function Command(props: LaunchProps<{ arguments: { query?: string
 
   return (
     <List
-      isLoading={isLoading}
+      isLoading={isLoading || isMutating}
       searchText={searchText}
       onSearchTextChange={setSearchText}
       filtering={true}
@@ -131,76 +117,15 @@ export default function Command(props: LaunchProps<{ arguments: { query?: string
           description="Press ⌘N to add your first value."
         />
       ) : (
-        sortedEntries.map((entry) => {
-          const typeInfo = TYPE_ICONS[entry.type];
-          return (
-            <List.Item
-              key={entry.id}
-              title={entry.label}
-              subtitle={truncateValue(entry.value)}
-              icon={{ source: typeInfo.icon, tintColor: typeInfo.color }}
-              accessories={[
-                { tag: { value: TYPE_NAMES[entry.type], color: typeInfo.color } },
-                { text: formatRelativeTime(entry.updatedAt) },
-              ]}
-              keywords={[entry.value]}
-              actions={
-                <ActionPanel>
-                  <Action
-                    icon={Icon.Clipboard}
-                    title="Copy Value"
-                    onAction={() => {
-                      Clipboard.copy(entry.value);
-                      showHUD("Copied!");
-                    }}
-                  />
-                  <Action
-                    icon={Icon.Terminal}
-                    title="Paste Value"
-                    shortcut={{ modifiers: ["cmd"], key: "return" }}
-                    onAction={() => {
-                      Clipboard.paste(entry.value);
-                      showHUD("Pasted!");
-                    }}
-                  />
-                  <Action
-                    icon={Icon.CopyClipboard}
-                    title="Copy as JSON"
-                    shortcut={{ modifiers: ["cmd", "shift"], key: "c" }}
-                    onAction={() => {
-                      const json = JSON.stringify(
-                        { label: entry.label, value: entry.value, type: entry.type },
-                        null,
-                        2,
-                      );
-                      Clipboard.copy(json);
-                      showHUD("Copied as JSON!");
-                    }}
-                  />
-                  <Action.Push
-                    icon={Icon.Pencil}
-                    title="Edit Value"
-                    shortcut={{ modifiers: ["cmd"], key: "e" }}
-                    target={<EditValueForm entry={entry} onUpdate={revalidate} />}
-                  />
-                  <Action
-                    icon={Icon.Duplicate}
-                    title="Duplicate"
-                    shortcut={{ modifiers: ["cmd"], key: "d" }}
-                    onAction={() => handleDuplicate(entry)}
-                  />
-                  <Action
-                    icon={Icon.Trash}
-                    title="Delete Value"
-                    style={Action.Style.Destructive}
-                    shortcut={{ modifiers: ["ctrl"], key: "x" }}
-                    onAction={() => handleDelete(entry.id, entry.label)}
-                  />
-                </ActionPanel>
-              }
-            />
-          );
-        })
+        sortedEntries.map((entry) => (
+          <ValueListItem
+            key={entry.id}
+            entry={entry}
+            onDelete={handleDelete}
+            onDuplicate={handleDuplicate}
+            onUpdate={revalidate}
+          />
+        ))
       )}
     </List>
   );

@@ -25,6 +25,11 @@ function isValidEntry(entry: unknown): entry is ValueEntry {
   );
 }
 
+/**
+ * Retrieve all stored value entries from LocalStorage.
+ * Returns an empty array if nothing is stored or if the data is corrupted.
+ * Filters out entries that do not match the expected ValueEntry shape.
+ */
 export async function getAllEntries(): Promise<ValueEntry[]> {
   const raw = await LocalStorage.getItem<string>(STORAGE_KEY);
   if (!raw) return [];
@@ -38,6 +43,10 @@ export async function getAllEntries(): Promise<ValueEntry[]> {
   }
 }
 
+/**
+ * Queue an async operation behind a shared lock to prevent race conditions
+ * during concurrent read-modify-write cycles on LocalStorage.
+ */
 async function withLock<T>(operation: () => Promise<T>): Promise<T> {
   const release = storageLock.then(() => {});
   let resolveLock: () => void;
@@ -52,6 +61,10 @@ async function withLock<T>(operation: () => Promise<T>): Promise<T> {
   }
 }
 
+/**
+ * Append a new entry to the stored list.
+ * This operation is atomic and serialized behind a lock.
+ */
 export async function saveEntry(entry: ValueEntry): Promise<void> {
   await withLock(async () => {
     const entries = await getAllEntries();
@@ -60,6 +73,10 @@ export async function saveEntry(entry: ValueEntry): Promise<void> {
   });
 }
 
+/**
+ * Update an existing entry in place, matching by id.
+ * This operation is atomic and serialized behind a lock.
+ */
 export async function updateEntry(updated: ValueEntry): Promise<void> {
   await withLock(async () => {
     const entries = await getAllEntries();
@@ -71,6 +88,10 @@ export async function updateEntry(updated: ValueEntry): Promise<void> {
   });
 }
 
+/**
+ * Remove an entry from storage by its id.
+ * This operation is atomic and serialized behind a lock.
+ */
 export async function deleteEntry(id: string): Promise<void> {
   await withLock(async () => {
     const entries = await getAllEntries();
