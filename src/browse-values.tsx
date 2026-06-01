@@ -12,11 +12,12 @@ import {
   showToast,
   Toast,
 } from "@raycast/api";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePromise } from "@raycast/utils";
 import { v4 as uuidv4 } from "uuid";
 import { getAllEntries, deleteEntry, saveEntry } from "./storage";
 import { ValueEntry, ValueType } from "./types";
+import { formatRelativeTime, getErrorMessage, truncateValue } from "./utils";
 import AddValueForm from "./add-value";
 import EditValueForm from "./edit-value";
 
@@ -38,24 +39,6 @@ const TYPE_NAMES: Record<ValueType, string> = {
   color: "color",
 };
 
-function truncateValue(value: string, maxLength = 100): string {
-  if (value.length <= maxLength) return value;
-  return value.slice(0, maxLength) + "...";
-}
-
-function formatRelativeTime(ms: number): string {
-  const seconds = Math.floor((Date.now() - ms) / 1000);
-  if (seconds < 60) return "just now";
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  if (days < 30) return `${days}d ago`;
-  const months = Math.floor(days / 30);
-  return `${months}mo ago`;
-}
-
 export default function Command(props: LaunchProps<{ arguments: { query?: string } }>) {
   const [searchText, setSearchText] = useState(props.arguments?.query ?? "");
   const { isLoading, data: entries, error, revalidate } = usePromise(getAllEntries, []);
@@ -65,54 +48,63 @@ export default function Command(props: LaunchProps<{ arguments: { query?: string
       showToast({
         style: Toast.Style.Failure,
         title: "Failed to load values",
-        message: String(error),
+        message: getErrorMessage(error),
       });
     }
   }, [error]);
 
-  async function handleDelete(id: string, label: string) {
-    const confirmed = await confirmAlert({
-      title: "Delete Value",
-      message: `Are you sure you want to delete "${label}"?`,
-      primaryAction: { title: "Delete", style: Alert.ActionStyle.Destructive },
-    });
-    if (!confirmed) return;
-    try {
-      await deleteEntry(id);
-      revalidate();
-      showHUD("Value deleted");
-    } catch (e) {
-      showToast({
-        style: Toast.Style.Failure,
-        title: "Failed to delete value",
-        message: String(e),
+  const handleDelete = useCallback(
+    async (id: string, label: string) => {
+      const confirmed = await confirmAlert({
+        title: "Delete Value",
+        message: `Are you sure you want to delete "${label}"?`,
+        primaryAction: { title: "Delete", style: Alert.ActionStyle.Destructive },
       });
-    }
-  }
+      if (!confirmed) return;
+      try {
+        await deleteEntry(id);
+        revalidate();
+        showHUD("Value deleted");
+      } catch (e) {
+        showToast({
+          style: Toast.Style.Failure,
+          title: "Failed to delete value",
+          message: getErrorMessage(e),
+        });
+      }
+    },
+    [revalidate],
+  );
 
-  async function handleDuplicate(entry: ValueEntry) {
-    try {
-      const newEntry: ValueEntry = {
-        id: uuidv4(),
-        label: `${entry.label} (copy)`,
-        value: entry.value,
-        type: entry.type,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      };
-      await saveEntry(newEntry);
-      revalidate();
-      showHUD("Value duplicated");
-    } catch (e) {
-      showToast({
-        style: Toast.Style.Failure,
-        title: "Failed to duplicate value",
-        message: String(e),
-      });
-    }
-  }
+  const handleDuplicate = useCallback(
+    async (entry: ValueEntry) => {
+      try {
+        const newEntry: ValueEntry = {
+          id: uuidv4(),
+          label: `${entry.label} (copy)`,
+          value: entry.value,
+          type: entry.type,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        };
+        await saveEntry(newEntry);
+        revalidate();
+        showHUD("Value duplicated");
+      } catch (e) {
+        showToast({
+          style: Toast.Style.Failure,
+          title: "Failed to duplicate value",
+          message: getErrorMessage(e),
+        });
+      }
+    },
+    [revalidate],
+  );
 
-  const sortedEntries = entries ? [...entries].sort((a, b) => b.updatedAt - a.updatedAt) : [];
+  const sortedEntries = useMemo(
+    () => (entries ? [...entries].sort((a, b) => b.updatedAt - a.updatedAt) : []),
+    [entries],
+  );
 
   return (
     <List
