@@ -119,6 +119,7 @@ export default function Command(props: LaunchProps<{ arguments: { query?: string
       isLoading={isLoading}
       searchText={searchText}
       onSearchTextChange={setSearchText}
+      filtering={true}
       searchBarPlaceholder="Search values..."
       actions={
         <ActionPanel>
