@@ -4,7 +4,7 @@
   "title": "Value Vault",
   "description": "Store values by label, search them, and copy them to your clipboard instantly.",
   "icon": "icon.png",
-  "author": "seppe_alaerts",
+  "author": "ringtail",
   "categories": [
     "Productivity",
     "Data"
@@ -45,9 +45,6 @@
     "eslint": "^9.22.0",
     "prettier": "^3.5.0",
     "typescript": "^5.8.0"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": ["esbuild"]
   },
   "scripts": {
     "build": "ray build",
