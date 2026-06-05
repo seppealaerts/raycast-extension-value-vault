@@ -30,7 +30,7 @@ export function detectType(value: string): ValueType {
     return "email";
   }
 
-  if (/^[\[{]/.test(trimmed)) {
+  if (/^[[{]/.test(trimmed)) {
     try {
       JSON.parse(trimmed);
       return "json";

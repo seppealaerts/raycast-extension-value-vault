@@ -7,8 +7,7 @@ let storageLock: Promise<void> = Promise.resolve();
 
 function isValidValueType(type: unknown): type is ValueType {
   return (
-    typeof type === "string" &&
-    ["string", "number", "url", "email", "json", "color"].includes(type)
+    typeof type === "string" && ["string", "number", "url", "email", "json", "color"].includes(type)
   );
 }
 

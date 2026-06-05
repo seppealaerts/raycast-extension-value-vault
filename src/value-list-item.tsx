@@ -5,10 +5,7 @@ import { formatRelativeTime, truncateValue } from "./utils";
 import EditValueForm from "./edit-value";
 
 /** Metadata for each value type: icon, color, and display name. */
-export const TYPE_META: Record<
-  ValueEntry["type"],
-  { icon: Icon; color: string; name: string }
-> = {
+export const TYPE_META: Record<ValueEntry["type"], { icon: Icon; color: string; name: string }> = {
   string: { icon: Icon.Text, color: "#000000", name: "string" },
   number: { icon: Icon.Hashtag, color: "#007AFF", name: "number" },
   url: { icon: Icon.Link, color: "#007AFF", name: "URL" },
@@ -21,7 +18,7 @@ export const TYPE_META: Record<
 function generateKeywords(value: string): string[] {
   const keywords: string[] = [value];
 
-  const segments = value.split(/[\s\/\-_\.]+/);
+  const segments = value.split(/[\s/_.-]+/);
   for (const segment of segments) {
     if (segment.length > 2 && !keywords.includes(segment)) {
       keywords.push(segment);
@@ -38,7 +35,9 @@ function generateKeywords(value: string): string[] {
           keywords.push(part);
         }
       }
-    } catch {}
+    } catch {
+      // invalid URL
+    }
   }
 
   return keywords;

@@ -17,7 +17,13 @@ interface Props {
   onSuccess?: () => void;
 }
 
-export default function ValueForm({ initialValues, navigationTitle, submitTitle, onSubmit, onSuccess }: Props) {
+export default function ValueForm({
+  initialValues,
+  navigationTitle,
+  submitTitle,
+  onSubmit,
+  onSuccess,
+}: Props) {
   const { pop } = useNavigation();
 
   const { handleSubmit, itemProps, values } = useForm<FormValues>({
@@ -67,8 +73,17 @@ export default function ValueForm({ initialValues, navigationTitle, submitTitle,
       }
       navigationTitle={navigationTitle}
     >
-      <Form.TextField title="Label" placeholder="e.g. Production API Key" autoFocus {...itemProps.label} />
-      <Form.TextArea title="Value" placeholder="Paste or type the value to store..." {...itemProps.value} />
+      <Form.TextField
+        title="Label"
+        placeholder="e.g. Production API Key"
+        autoFocus
+        {...itemProps.label}
+      />
+      <Form.TextArea
+        title="Value"
+        placeholder="Paste or type the value to store..."
+        {...itemProps.value}
+      />
       <Form.Dropdown
         title="Type"
         info={
