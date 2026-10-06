@@ -73,12 +73,7 @@ export default function ValueForm({
       }
       navigationTitle={navigationTitle}
     >
-      <Form.TextField
-        title="Label"
-        placeholder="e.g. Production API Key"
-        autoFocus
-        {...itemProps.label}
-      />
+      <Form.TextField title="Label" placeholder="My label" autoFocus {...itemProps.label} />
       <Form.TextArea
         title="Value"
         placeholder="Paste or type the value to store..."
