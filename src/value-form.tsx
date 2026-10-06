@@ -36,7 +36,8 @@ export default function ValueForm({
       try {
         await onSubmit({
           label: formValues.label.trim(),
-          value: formValues.value.trim(),
+          // Values are stored verbatim: trailing spaces can be significant in secrets.
+          value: formValues.value,
           type: parsedType,
         });
         onSuccess?.();

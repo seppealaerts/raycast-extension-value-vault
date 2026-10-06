@@ -3,6 +3,7 @@ plans
 node_modules
 .ray
 *.tsbuildinfo
+.DS_Store
 .omc/
 .omo/
 .tmp-logos/

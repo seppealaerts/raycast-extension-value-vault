@@ -47,7 +47,11 @@ export async function getAllEntries(): Promise<ValueEntry[]> {
  * during concurrent read-modify-write cycles on LocalStorage.
  */
 async function withLock<T>(operation: () => Promise<T>): Promise<T> {
-  const release = storageLock.then(() => {});
+  // Swallow prior failures: a rejected lock must not deadlock every later write.
+  const release = storageLock.then(
+    () => {},
+    () => {},
+  );
   let resolveLock: () => void;
   storageLock = new Promise((resolve) => {
     resolveLock = resolve;

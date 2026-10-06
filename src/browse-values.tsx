@@ -2,6 +2,7 @@ import {
   Action,
   ActionPanel,
   Alert,
+  confirmAlert,
   Icon,
   LaunchProps,
   List,
@@ -33,23 +34,17 @@ export default function Command(props: LaunchProps<{ arguments: { query?: string
     }
   }, [error]);
 
-  const handleDelete = useCallback(
-    async (id: string, label: string) => {
-      const confirmed = await confirmAlert({
-        title: "Delete Value",
-        message: `Are you sure you want to delete "${label}"?`,
-        primaryAction: { title: "Delete", style: Alert.ActionStyle.Destructive },
-      });
-      if (!confirmed) return;
+  const runMutation = useCallback(
+    async (action: () => Promise<void>, successMessage: string, failureTitle: string) => {
       setIsMutating(true);
       try {
-        await deleteEntry(id);
+        await action();
         await revalidate();
-        showHUD("Value deleted");
+        showHUD(successMessage);
       } catch (e) {
         showToast({
           style: Toast.Style.Failure,
-          title: "Failed to delete value",
+          title: failureTitle,
           message: getErrorMessage(e),
         });
       } finally {
@@ -59,32 +54,33 @@ export default function Command(props: LaunchProps<{ arguments: { query?: string
     [revalidate],
   );
 
+  const handleDelete = useCallback(
+    async (id: string, label: string) => {
+      const confirmed = await confirmAlert({
+        title: "Delete Value",
+        message: `Are you sure you want to delete "${label}"?`,
+        primaryAction: { title: "Delete", style: Alert.ActionStyle.Destructive },
+      });
+      if (!confirmed) return;
+      await runMutation(() => deleteEntry(id), "Value deleted", "Failed to delete value");
+    },
+    [runMutation],
+  );
+
   const handleDuplicate = useCallback(
     async (entry: ValueEntry) => {
-      setIsMutating(true);
-      try {
-        const newEntry: ValueEntry = {
-          id: uuidv4(),
-          label: `${entry.label} (copy)`,
-          value: entry.value,
-          type: entry.type,
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        };
-        await saveEntry(newEntry);
-        await revalidate();
-        showHUD("Value duplicated");
-      } catch (e) {
-        showToast({
-          style: Toast.Style.Failure,
-          title: "Failed to duplicate value",
-          message: getErrorMessage(e),
-        });
-      } finally {
-        setIsMutating(false);
-      }
+      const now = Date.now();
+      const newEntry: ValueEntry = {
+        id: uuidv4(),
+        label: `${entry.label} (copy)`,
+        value: entry.value,
+        type: entry.type,
+        createdAt: now,
+        updatedAt: now,
+      };
+      await runMutation(() => saveEntry(newEntry), "Value duplicated", "Failed to duplicate value");
     },
-    [revalidate],
+    [runMutation],
   );
 
   const sortedEntries = useMemo(
@@ -97,7 +93,7 @@ export default function Command(props: LaunchProps<{ arguments: { query?: string
       isLoading={isLoading || isMutating}
       searchText={searchText}
       onSearchTextChange={setSearchText}
-      filtering={true}
+      filtering
       searchBarPlaceholder="Search values..."
       actions={
         <ActionPanel>
