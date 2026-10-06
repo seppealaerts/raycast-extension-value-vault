@@ -5,6 +5,7 @@
   "description": "Store values by label, search them, and copy them to your clipboard instantly.",
   "icon": "icon.png",
   "author": "ringtail",
+  "platforms": ["macOS"],
   "categories": [
     "Productivity",
     "Data"
