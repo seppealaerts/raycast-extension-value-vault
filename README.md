@@ -50,8 +50,8 @@ Search for **Value Vault** in the Raycast Store and install with one click.
 ### Development / Manual
 
 ```bash
-git clone https://github.com/seppealaerts/value-vault.ringtail.dev.git
-cd value-vault.ringtail.dev
+git clone https://github.com/seppealaerts/raycast-extension-value-vault.git
+cd raycast-extension-value-vault
 npm install
 npm run build
 ```
@@ -59,7 +59,7 @@ npm run build
 Then in Raycast:
 1. Open Raycast (`⌘Space`)
 2. Search for **Import Extension**
-3. Select the `value-vault.ringtail.dev` folder
+3. Select the `raycast-extension-value-vault` folder
 
 For development with hot-reload:
 
